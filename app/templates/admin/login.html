@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Login — BC Platform</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body { background: #151B33; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+    .card { border: none; border-radius: 12px; width: 100%; max-width: 400px; }
+    .btn-primary { background: #1B8A6B; border-color: #1B8A6B; }
+    .btn-primary:hover { background: #156b53; border-color: #156b53; }
+  </style>
+</head>
+<body>
+  <div class="card shadow-lg p-4">
+    <h4 class="mb-1 fw-bold text-dark">BC Platform</h4>
+    <p class="text-muted mb-4">Admin Login</p>
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <div class="alert alert-danger">{{ messages[0] }}</div>
+      {% endif %}
+    {% endwith %}
+    <form method="POST">
+      <div class="mb-3">
+        <label class="form-label">Username</label>
+        <input type="text" name="username" class="form-control" required>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Password</label>
+        <input type="password" name="password" class="form-control" required>
+      </div>
+      <button type="submit" class="btn btn-primary w-100">Login</button>
+    </form>
+  </div>
+</body>
+</html>

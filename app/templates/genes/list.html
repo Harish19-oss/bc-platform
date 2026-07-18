@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-5">
+  <h2 class="mb-4">Gene Search</h2>
+
+  <!-- Search Bar -->
+  <form method="get" class="mb-3">
+    <div class="input-group">
+      <input type="text" name="q" class="form-control"
+             placeholder="Search by symbol or name..."
+             value="{{ query }}">
+      <button class="btn btn-primary" type="submit">Search</button>
+      {% if query %}
+      <a href="{{ url_for('genes.gene_list') }}" class="btn btn-outline-secondary">Clear</a>
+      {% endif %}
+    </div>
+  </form>
+
+  <!-- Filter by Chromosome -->
+  <form method="get" class="mb-4 d-flex gap-2">
+    <input type="hidden" name="q" value="{{ query }}">
+    <select name="chrom" class="form-select w-auto" onchange="this.form.submit()">
+      <option value="">All Chromosomes</option>
+      {% for c in chromosomes %}
+      <option value="{{ c }}" {% if chrom_filter == c %}selected{% endif %}>Chr {{ c }}</option>
+      {% endfor %}
+    </select>
+    <select name="sort" class="form-select w-auto" onchange="this.form.submit()">
+      <option value="symbol" {% if sort == 'symbol' %}selected{% endif %}>Sort: Symbol</option>
+      <option value="name" {% if sort == 'name' %}selected{% endif %}>Sort: Name</option>
+      <option value="chromosome" {% if sort == 'chromosome' %}selected{% endif %}>Sort: Chromosome</option>
+    </select>
+  </form>
+
+  {% if genes %}
+  <p class="text-muted small">Showing {{ pagination.total }} gene(s)
+    {% if query %}matching "<strong>{{ query }}</strong>"{% endif %}
+    {% if chrom_filter %}on chromosome {{ chrom_filter }}{% endif %}
+  </p>
+
+  <table class="table table-hover">
+    <thead class="table-dark">
+      <tr>
+        <th>Symbol</th>
+        <th>Name</th>
+        <th>Chromosome</th>
+        <th>Pathways</th>
+        <th>Publications</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for gene in genes %}
+      <tr>
+        <td><strong>{{ gene.symbol }}</strong></td>
+        <td>{{ gene.name }}</td>
+        <td>{{ gene.chromosome or '—' }}</td>
+        <td><span class="badge bg-secondary">{{ gene.pathways|length }}</span></td>
+        <td><span class="badge bg-info text-dark">{{ gene.publications|length }}</span></td>
+        <td><a href="{{ url_for('genes.gene_detail', gene_id=gene.gene_id) }}"
+               class="btn btn-sm btn-outline-primary">View</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <nav>
+    <ul class="pagination">
+      {% if pagination.has_prev %}
+      <li class="page-item">
+        <a class="page-link" href="{{ url_for('genes.gene_list', q=query, chrom=chrom_filter, sort=sort, page=pagination.prev_num) }}">Previous</a>
+      </li>
+      {% endif %}
+      <li class="page-item disabled">
+        <span class="page-link">Page {{ pagination.page }} of {{ pagination.pages }}</span>
+      </li>
+      {% if pagination.has_next %}
+      <li class="page-item">
+        <a class="page-link" href="{{ url_for('genes.gene_list', q=query, chrom=chrom_filter, sort=sort, page=pagination.next_num) }}">Next</a>
+      </li>
+      {% endif %}
+    </ul>
+  </nav>
+
+  {% else %}
+  <p class="text-muted">No genes found. Try a different search term.</p>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-5">
+  <a href="{{ url_for('genes.gene_list') }}" class="btn btn-sm btn-outline-secondary mb-3">&larr; Back to search</a>
+  <h2>{{ gene.symbol }}</h2>
+  <p class="text-muted">{{ gene.name }}</p>
+
+  <table class="table">
+    <tr><th>Chromosome</th><td>{{ gene.chromosome }}</td></tr>
+    <tr><th>Position</th><td>{{ gene.start_position }} - {{ gene.end_position }} ({{ gene.strand }})</td></tr>
+    <tr><th>NCBI Gene ID</th><td>{{ gene.ncbi_gene_id }}</td></tr>
+    <tr><th>Ensembl ID</th><td>{{ gene.ensembl_id }}</td></tr>
+  </table>
+
+  <h4 class="mt-4">Mutations ({{ gene.mutations|length }})</h4>
+  {% if gene.mutations %}
+  <ul class="list-group">
+    {% for m in gene.mutations %}
+    <li class="list-group-item">{{ m.hgvs_p or m.hgvs_c }} — {{ m.clinical_significance }}</li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="text-muted">No mutation data yet.</p>
+  {% endif %}
+
+  <h4 class="mt-4">TCGA-BRCA Mutation Frequency</h4>
+  {% if gene.tcga_stats %}
+    {% for stat in gene.tcga_stats %}
+    <p>
+      <strong>{{ stat.mutated_cases }} / {{ stat.total_cases }}</strong> TCGA-BRCA patients
+      carry a mutation in this gene
+      (<strong>{{ stat.frequency_pct }}%</strong>)
+    </p>
+    {% endfor %}
+  {% else %}
+  <p class="text-muted">No TCGA mutation frequency data available yet.</p>
+  {% endif %}
+
+  <h4 class="mt-4">Pathways ({{ gene.pathways|length }})</h4>
+  {% if gene.pathways %}
+  <ul class="list-group">
+    {% for pw in gene.pathways %}
+    <li class="list-group-item">
+      <span class="badge bg-secondary">{{ pw.source }}</span>
+      {{ pw.name }}
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="text-muted">No pathway data available yet.</p>
+  {% endif %}
+
+  <h4 class="mt-4">GEO Expression Context ({{ gene.subtypes|length }})</h4>
+  {% if gene.subtypes %}
+  <ul class="list-group">
+    {% for st in gene.subtypes %}
+    <li class="list-group-item">
+      <span class="badge bg-info text-dark">{{ st.source }}</span>
+      <strong>{{ st.subtype_name }}</strong>
+      {% if st.n_samples %}
+        <small class="text-muted ms-2">{{ st.n_samples }} samples</small>
+      {% endif %}
+      {% if st.notes %}
+        <div class="text-muted small mt-1">{{ st.notes }}</div>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="text-muted">No GEO expression data available yet.</p>
+  {% endif %}
+
+  <h4 class="mt-4">Drug Repurposing ({{ gene.drugs|length }})</h4>
+  {% if gene.drugs %}
+  <ul class="list-group">
+    {% for drug in gene.drugs %}
+    <li class="list-group-item d-flex justify-content-between align-items-center">
+      <div>
+        <strong>{{ drug.drug_name }}</strong>
+        {% if drug.interaction_type %}
+          <span class="text-muted small ms-2">{{ drug.interaction_type }}</span>
+        {% endif %}
+      </div>
+      <div>
+        {% if drug.approved %}
+          <span class="badge bg-success">FDA Approved</span>
+        {% else %}
+          <span class="badge bg-warning text-dark">Investigational</span>
+        {% endif %}
+        <span class="badge bg-light text-dark ms-1">{{ drug.source }}</span>
+      </div>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="text-muted">No drug interaction data available yet.</p>
+  {% endif %}
+
+  <!-- Visualizations -->
+  <div class="row mt-4">
+    <div class="col-md-5">
+      <h5>Pathway Sources</h5>
+      <canvas id="pathwayChart" height="200"></canvas>
+    </div>
+    <div class="col-md-7">
+      <h5>TCGA Mutation Frequency</h5>
+      <canvas id="tcgaChart" height="200"></canvas>
+    </div>
+  </div>
+
+  <h4 class="mt-4">Publications ({{ gene.publications|length }})</h4>
+  {% if gene.publications %}
+  <ul class="list-group">
+    {% for pub in gene.publications %}
+    <li class="list-group-item">
+      <div><strong>{{ pub.title }}</strong></div>
+      <div class="text-muted small mt-1">
+        {{ pub.authors }}
+        {% if pub.journal %} — <em>{{ pub.journal }}</em>{% endif %}
+        {% if pub.pub_year %} ({{ pub.pub_year }}){% endif %}
+        <a href="https://pubmed.ncbi.nlm.nih.gov/{{ pub.pmid }}"
+           target="_blank" class="ms-2">PubMed ↗</a>
+      </div>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="text-muted">No publications available yet.</p>
+  {% endif %}
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const pathwayCounts = {
+  Reactome: {{ gene.pathways | selectattr('source', 'equalto', 'Reactome') | list | length }},
+  KEGG:     {{ gene.pathways | selectattr('source', 'equalto', 'KEGG')     | list | length }}
+};
+
+new Chart(document.getElementById('pathwayChart'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Reactome', 'KEGG'],
+    datasets: [{
+      data: [pathwayCounts.Reactome, pathwayCounts.KEGG],
+      backgroundColor: ['#10B981', '#151B33']
+    }]
+  },
+  options: {
+    plugins: { legend: { position: 'bottom' } },
+    cutout: '60%'
+  }
+});
+
+const tcgaData = {{ gene.tcga_stats | map(attribute='frequency_pct') | list | tojson }};
+const tcgaLabels = {{ gene.tcga_stats | map(attribute='project_id') | list | tojson }};
+
+if (tcgaData.length > 0) {
+  new Chart(document.getElementById('tcgaChart'), {
+    type: 'bar',
+    data: {
+      labels: tcgaLabels,
+      datasets: [{
+        label: 'Mutation Frequency (%)',
+        data: tcgaData,
+        backgroundColor: '#10B981'
+      }]
+    },
+    options: {
+      scales: { y: { beginAtZero: true, title: { display: true, text: '%' } } },
+      plugins: { legend: { display: false } }
+    }
+  });
+}
+</script>
+{% endblock %}

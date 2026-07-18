@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-5">
+  <a href="{{ url_for('proteins.protein_list') }}" class="btn btn-sm btn-outline-secondary mb-3">&larr; Back to search</a>
+  <h2>{{ protein.uniprot_id }}</h2>
+  <p class="text-muted">{{ protein.name }}</p>
+
+  <table class="table">
+    <tr><th>Gene</th><td>
+      {% if protein.gene %}
+      <a href="{{ url_for('genes.gene_detail', gene_id=protein.gene.gene_id) }}">{{ protein.gene.symbol }}</a>
+      {% else %}—{% endif %}
+    </td></tr>
+    <tr><th>Sequence Length</th><td>{{ protein.sequence_length }} aa</td></tr>
+  </table>
+
+  <h4 class="mt-4">Function</h4>
+  <p>{{ protein.function_summary or "No function summary available." }}</p>
+</div>
+{% endblock %}
