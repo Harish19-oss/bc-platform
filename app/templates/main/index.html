@@ -1,8 +1,254 @@
-<!DOCTYPE html>
-<html>
-<head><title>BC Platform</title></head>
-<body>
-  <h1>Breast Cancer Bioinformatics Platform</h1>
-  <p>Database is connected and running!</p>
-</body>
-</html>
+{% extends "base.html" %}
+{% block title %}BC Platform — Breast Cancer Integrated Bioinformatics Platform{% endblock %}
+{% block content %}
+<style>
+  .home-hero {
+    min-height: 62vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 3rem 1.5rem;
+    background: linear-gradient(180deg, #151B33 0%, #1F2A4D 100%);
+    color: #fff;
+  }
+
+  .home-hero h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 2.4rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .home-hero p.subtitle {
+    opacity: 0.75;
+    max-width: 560px;
+    margin: 0 auto 2rem auto;
+  }
+
+  .home-search-box {
+    width: 100%;
+    max-width: 640px;
+  }
+
+  .home-search-box .form-control {
+    padding: 0.85rem 1.1rem;
+    font-size: 1rem;
+    border-radius: 10px 0 0 10px;
+    border: none;
+  }
+
+  .home-search-box .btn {
+    border-radius: 0 10px 10px 0;
+    background: #10B981;
+    border-color: #10B981;
+    color: #fff;
+    padding: 0 1.5rem;
+  }
+
+  .home-search-box .btn:hover {
+    background: #0ea371;
+  }
+
+  .home-quick-links {
+    margin-top: 1.25rem;
+    font-size: 0.9rem;
+  }
+
+  .home-quick-links a {
+    color: #cfd6e6;
+    text-decoration: none;
+    margin: 0 0.6rem;
+  }
+
+  .home-quick-links a:hover {
+    color: #fff;
+    text-decoration: underline;
+  }
+
+  .home-stats {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    margin-top: 2.5rem;
+  }
+
+  .home-stat {
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 12px;
+    padding: 1rem 1.5rem;
+    min-width: 120px;
+  }
+
+  .home-stat .num {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 1.5rem;
+  }
+
+  .home-stat .label {
+    font-size: 0.75rem;
+    opacity: 0.7;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .home-resources {
+    max-width: 960px;
+    margin: 3rem auto;
+    padding: 0 1.5rem;
+  }
+
+  .home-resources h5 {
+    font-family: 'Space Grotesk', sans-serif;
+    margin-bottom: 1rem;
+  }
+
+  .resource-card {
+    display: block;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(21, 27, 51, 0.08);
+    padding: 1.25rem;
+    text-decoration: none;
+    color: inherit;
+    height: 100%;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .resource-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(21, 27, 51, 0.14);
+    color: inherit;
+  }
+
+  .resource-card i {
+    font-size: 1.4rem;
+    color: #10B981;
+    margin-bottom: 0.5rem;
+    display: block;
+  }
+
+  .home-about {
+    background: #fff;
+    border-top: 1px solid #e9ecef;
+    padding: 2.5rem 1.5rem;
+    margin-top: 1rem;
+  }
+
+  .home-about h5 {
+    font-family: 'Space Grotesk', sans-serif;
+    margin-bottom: 0.75rem;
+  }
+
+  .home-about a {
+    color: #10B981;
+    text-decoration: none;
+  }
+
+  .home-about a:hover {
+    text-decoration: underline;
+  }
+</style>
+
+<div class="home-hero">
+  <h1>Breast Cancer Integrated Bioinformatics Platform</h1>
+  <p class="subtitle">
+    Search genes, mutations, pathways, drug repurposing candidates, and publications
+    across integrated NCBI, Ensembl, ClinVar, TCGA, Reactome/KEGG, GEO, and PubMed data.
+  </p>
+
+  <form class="d-flex home-search-box mx-auto" method="get" action="{{ url_for('main.search') }}">
+    <input type="text" name="q" class="form-control" placeholder="Search by gene symbol or name (e.g. TP53, BRCA1)..."
+      autofocus required>
+    <button type="submit" class="btn">
+      <i class="bi bi-search"></i> Search
+    </button>
+  </form>
+
+  <div class="home-quick-links">
+    Try:
+    <a href="{{ url_for('main.search', q='TP53') }}">TP53</a>
+    <a href="{{ url_for('main.search', q='BRCA1') }}">BRCA1</a>
+    <a href="{{ url_for('main.search', q='AKT1') }}">AKT1</a>
+  </div>
+
+  <div class="home-stats">
+    <div class="home-stat">
+      <div class="num">50</div>
+      <div class="label">Genes</div>
+    </div>
+    <div class="home-stat">
+      <div class="num">1044</div>
+      <div class="label">Pathways</div>
+    </div>
+    <div class="home-stat">
+      <div class="num">406</div>
+      <div class="label">Drugs</div>
+    </div>
+    <div class="home-stat">
+      <div class="num">250</div>
+      <div class="label">Publications</div>
+    </div>
+  </div>
+</div>
+
+<div class="home-resources">
+  <h5>Explore the platform</h5>
+  <div class="row g-3">
+    <div class="col-md-4">
+      <a href="{{ url_for('genes.gene_list') }}" class="resource-card">
+        <i class="bi bi-clipboard2-pulse"></i>
+        <strong>Genes</strong>
+        <div class="text-muted small mt-1">Browse and search all curated breast cancer genes.</div>
+      </a>
+    </div>
+    <div class="col-md-4">
+      <a href="{{ url_for('proteins.protein_list') }}" class="resource-card">
+        <i class="bi bi-hexagon"></i>
+        <strong>Proteins</strong>
+        <div class="text-muted small mt-1">Explore associated protein data and structures.</div>
+      </a>
+    </div>
+    <div class="col-md-4">
+      <a href="{{ url_for('admin.login') }}" class="resource-card">
+        <i class="bi bi-shield-lock"></i>
+        <strong>Admin Panel</strong>
+        <div class="text-muted small mt-1">Manage all platform data (login required).</div>
+      </a>
+    </div>
+  </div>
+</div>
+
+<div class="home-about">
+  <div class="container">
+    <div class="row align-items-start g-4">
+      <div class="col-md-7">
+        <h5>About This Platform</h5>
+        <p class="text-muted">
+          The Breast Cancer Integrated Bioinformatics Platform brings together curated
+          gene, protein, mutation, pathway, and drug-repurposing data from NCBI, Ensembl,
+          ClinVar, TCGA, Reactome, KEGG, GEO, and PubMed into a single searchable interface.
+          It was built to make cross-referencing breast cancer research data faster and
+          more intuitive for researchers, students, and clinicians.
+        </p>
+      </div>
+      <div class="col-md-5">
+        <h5>Developer</h5>
+        <ul class="list-unstyled text-muted mb-0">
+          <li><strong>Name:</strong> Harish Siva Balaji M</li>
+          <li><strong>Degree:</strong> B.Sc. Bioinformatics And Data Science</li>
+          <li><strong>University:</strong> Sathyabama Institute of Science and Technology</li>
+          <li>
+            <strong>Contact:</strong>
+            <a href="mailto:harishsivabalaji12@gmail.com">harishsivabalaji12@gmail.com</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

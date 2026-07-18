@@ -1,133 +1,232 @@
 {% extends "base.html" %}
 {% block content %}
+<style>
+  .gene-layout {
+    display: flex;
+    gap: 2rem;
+    align-items: flex-start;
+  }
+  .gene-sidebar {
+    position: sticky;
+    top: 1.5rem;
+    width: 220px;
+    flex-shrink: 0;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(21,27,51,0.08);
+    padding: 1.25rem 1rem;
+    max-height: calc(100vh - 3rem);
+    overflow-y: auto;
+  }
+  .gene-sidebar .nav-title {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #6c757d;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+  }
+  .gene-sidebar a {
+    display: block;
+    padding: 0.4rem 0.6rem;
+    border-radius: 8px;
+    color: #333;
+    text-decoration: none;
+    font-size: 0.9rem;
+    margin-bottom: 0.15rem;
+    border-left: 3px solid transparent;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  }
+  .gene-sidebar a:hover {
+    background: #f1f3f5;
+  }
+  .gene-sidebar a.active {
+    background: #ECFDF5;
+    border-left-color: #10B981;
+    color: #10B981;
+    font-weight: 600;
+  }
+  .gene-main {
+    flex: 1;
+    min-width: 0;
+  }
+  .gene-section {
+    scroll-margin-top: 1.5rem;
+  }
+
+  @media (max-width: 900px) {
+    .gene-layout { flex-direction: column; }
+    .gene-sidebar {
+      position: static;
+      width: 100%;
+      max-height: none;
+    }
+  }
+</style>
+
 <div class="container mt-5">
   <a href="{{ url_for('genes.gene_list') }}" class="btn btn-sm btn-outline-secondary mb-3">&larr; Back to search</a>
-  <h2>{{ gene.symbol }}</h2>
-  <p class="text-muted">{{ gene.name }}</p>
 
-  <table class="table">
-    <tr><th>Chromosome</th><td>{{ gene.chromosome }}</td></tr>
-    <tr><th>Position</th><td>{{ gene.start_position }} - {{ gene.end_position }} ({{ gene.strand }})</td></tr>
-    <tr><th>NCBI Gene ID</th><td>{{ gene.ncbi_gene_id }}</td></tr>
-    <tr><th>Ensembl ID</th><td>{{ gene.ensembl_id }}</td></tr>
-  </table>
+  <div class="gene-layout">
+    <!-- Sticky sidebar nav -->
+    <aside class="gene-sidebar">
+      <div class="nav-title">On this page</div>
+      <a href="#overview" class="gene-nav-link" data-target="overview">Overview</a>
+      <a href="#mutations" class="gene-nav-link" data-target="mutations">Mutations</a>
+      <a href="#tcga" class="gene-nav-link" data-target="tcga">TCGA Frequency</a>
+      <a href="#pathways" class="gene-nav-link" data-target="pathways">Pathways</a>
+      <a href="#geo" class="gene-nav-link" data-target="geo">GEO Expression</a>
+      <a href="#drugs" class="gene-nav-link" data-target="drugs">Drug Repurposing</a>
+      <a href="#charts" class="gene-nav-link" data-target="charts">Charts</a>
+      <a href="#publications" class="gene-nav-link" data-target="publications">Publications</a>
+    </aside>
 
-  <h4 class="mt-4">Mutations ({{ gene.mutations|length }})</h4>
-  {% if gene.mutations %}
-  <ul class="list-group">
-    {% for m in gene.mutations %}
-    <li class="list-group-item">{{ m.hgvs_p or m.hgvs_c }} — {{ m.clinical_significance }}</li>
-    {% endfor %}
-  </ul>
-  {% else %}
-  <p class="text-muted">No mutation data yet.</p>
-  {% endif %}
+    <!-- Main content -->
+    <div class="gene-main">
 
-  <h4 class="mt-4">TCGA-BRCA Mutation Frequency</h4>
-  {% if gene.tcga_stats %}
-    {% for stat in gene.tcga_stats %}
-    <p>
-      <strong>{{ stat.mutated_cases }} / {{ stat.total_cases }}</strong> TCGA-BRCA patients
-      carry a mutation in this gene
-      (<strong>{{ stat.frequency_pct }}%</strong>)
-    </p>
-    {% endfor %}
-  {% else %}
-  <p class="text-muted">No TCGA mutation frequency data available yet.</p>
-  {% endif %}
+      <div id="overview" class="gene-section">
+        <h2>{{ gene.symbol }}</h2>
+        <p class="text-muted">{{ gene.name }}</p>
 
-  <h4 class="mt-4">Pathways ({{ gene.pathways|length }})</h4>
-  {% if gene.pathways %}
-  <ul class="list-group">
-    {% for pw in gene.pathways %}
-    <li class="list-group-item">
-      <span class="badge bg-secondary">{{ pw.source }}</span>
-      {{ pw.name }}
-    </li>
-    {% endfor %}
-  </ul>
-  {% else %}
-  <p class="text-muted">No pathway data available yet.</p>
-  {% endif %}
-
-  <h4 class="mt-4">GEO Expression Context ({{ gene.subtypes|length }})</h4>
-  {% if gene.subtypes %}
-  <ul class="list-group">
-    {% for st in gene.subtypes %}
-    <li class="list-group-item">
-      <span class="badge bg-info text-dark">{{ st.source }}</span>
-      <strong>{{ st.subtype_name }}</strong>
-      {% if st.n_samples %}
-        <small class="text-muted ms-2">{{ st.n_samples }} samples</small>
-      {% endif %}
-      {% if st.notes %}
-        <div class="text-muted small mt-1">{{ st.notes }}</div>
-      {% endif %}
-    </li>
-    {% endfor %}
-  </ul>
-  {% else %}
-  <p class="text-muted">No GEO expression data available yet.</p>
-  {% endif %}
-
-  <h4 class="mt-4">Drug Repurposing ({{ gene.drugs|length }})</h4>
-  {% if gene.drugs %}
-  <ul class="list-group">
-    {% for drug in gene.drugs %}
-    <li class="list-group-item d-flex justify-content-between align-items-center">
-      <div>
-        <strong>{{ drug.drug_name }}</strong>
-        {% if drug.interaction_type %}
-          <span class="text-muted small ms-2">{{ drug.interaction_type }}</span>
-        {% endif %}
+        <table class="table">
+          <tr><th>Chromosome</th><td>{{ gene.chromosome }}</td></tr>
+          <tr><th>Position</th><td>{{ gene.start_position }} - {{ gene.end_position }} ({{ gene.strand }})</td></tr>
+          <tr><th>NCBI Gene ID</th><td>{{ gene.ncbi_gene_id }}</td></tr>
+          <tr><th>Ensembl ID</th><td>{{ gene.ensembl_id }}</td></tr>
+        </table>
       </div>
-      <div>
-        {% if drug.approved %}
-          <span class="badge bg-success">FDA Approved</span>
+
+      <div id="mutations" class="gene-section pt-3">
+        <h4>Mutations ({{ gene.mutations|length }})</h4>
+        {% if gene.mutations %}
+        <ul class="list-group">
+          {% for m in gene.mutations %}
+          <li class="list-group-item">{{ m.hgvs_p or m.hgvs_c }} — {{ m.clinical_significance }}</li>
+          {% endfor %}
+        </ul>
         {% else %}
-          <span class="badge bg-warning text-dark">Investigational</span>
+        <p class="text-muted">No mutation data yet.</p>
         {% endif %}
-        <span class="badge bg-light text-dark ms-1">{{ drug.source }}</span>
       </div>
-    </li>
-    {% endfor %}
-  </ul>
-  {% else %}
-  <p class="text-muted">No drug interaction data available yet.</p>
-  {% endif %}
 
-  <!-- Visualizations -->
-  <div class="row mt-4">
-    <div class="col-md-5">
-      <h5>Pathway Sources</h5>
-      <canvas id="pathwayChart" height="200"></canvas>
-    </div>
-    <div class="col-md-7">
-      <h5>TCGA Mutation Frequency</h5>
-      <canvas id="tcgaChart" height="200"></canvas>
-    </div>
-  </div>
-
-  <h4 class="mt-4">Publications ({{ gene.publications|length }})</h4>
-  {% if gene.publications %}
-  <ul class="list-group">
-    {% for pub in gene.publications %}
-    <li class="list-group-item">
-      <div><strong>{{ pub.title }}</strong></div>
-      <div class="text-muted small mt-1">
-        {{ pub.authors }}
-        {% if pub.journal %} — <em>{{ pub.journal }}</em>{% endif %}
-        {% if pub.pub_year %} ({{ pub.pub_year }}){% endif %}
-        <a href="https://pubmed.ncbi.nlm.nih.gov/{{ pub.pmid }}"
-           target="_blank" class="ms-2">PubMed ↗</a>
+      <div id="tcga" class="gene-section pt-4">
+        <h4>TCGA-BRCA Mutation Frequency</h4>
+        {% if gene.tcga_stats %}
+          {% for stat in gene.tcga_stats %}
+          <p>
+            <strong>{{ stat.mutated_cases }} / {{ stat.total_cases }}</strong> TCGA-BRCA patients
+            carry a mutation in this gene
+            (<strong>{{ stat.frequency_pct }}%</strong>)
+          </p>
+          {% endfor %}
+        {% else %}
+        <p class="text-muted">No TCGA mutation frequency data available yet.</p>
+        {% endif %}
       </div>
-    </li>
-    {% endfor %}
-  </ul>
-  {% else %}
-  <p class="text-muted">No publications available yet.</p>
-  {% endif %}
 
+      <div id="pathways" class="gene-section pt-4">
+        <h4>Pathways ({{ gene.pathways|length }})</h4>
+        {% if gene.pathways %}
+        <ul class="list-group">
+          {% for pw in gene.pathways %}
+          <li class="list-group-item">
+            <span class="badge bg-secondary">{{ pw.source }}</span>
+            {{ pw.name }}
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-muted">No pathway data available yet.</p>
+        {% endif %}
+      </div>
+
+      <div id="geo" class="gene-section pt-4">
+        <h4>GEO Expression Context ({{ gene.subtypes|length }})</h4>
+        {% if gene.subtypes %}
+        <ul class="list-group">
+          {% for st in gene.subtypes %}
+          <li class="list-group-item">
+            <span class="badge bg-info text-dark">{{ st.source }}</span>
+            <strong>{{ st.subtype_name }}</strong>
+            {% if st.n_samples %}
+              <small class="text-muted ms-2">{{ st.n_samples }} samples</small>
+            {% endif %}
+            {% if st.notes %}
+              <div class="text-muted small mt-1">{{ st.notes }}</div>
+            {% endif %}
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-muted">No GEO expression data available yet.</p>
+        {% endif %}
+      </div>
+
+      <div id="drugs" class="gene-section pt-4">
+        <h4>Drug Repurposing ({{ gene.drugs|length }})</h4>
+        {% if gene.drugs %}
+        <ul class="list-group">
+          {% for drug in gene.drugs %}
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <div>
+              <strong>{{ drug.drug_name }}</strong>
+              {% if drug.interaction_type %}
+                <span class="text-muted small ms-2">{{ drug.interaction_type }}</span>
+              {% endif %}
+            </div>
+            <div>
+              {% if drug.approved %}
+                <span class="badge bg-success">FDA Approved</span>
+              {% else %}
+                <span class="badge bg-warning text-dark">Investigational</span>
+              {% endif %}
+              <span class="badge bg-light text-dark ms-1">{{ drug.source }}</span>
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-muted">No drug interaction data available yet.</p>
+        {% endif %}
+      </div>
+
+      <div id="charts" class="gene-section pt-4">
+        <div class="row">
+          <div class="col-md-5">
+            <h5>Pathway Sources</h5>
+            <canvas id="pathwayChart" height="200"></canvas>
+          </div>
+          <div class="col-md-7">
+            <h5>TCGA Mutation Frequency</h5>
+            <canvas id="tcgaChart" height="200"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div id="publications" class="gene-section pt-4 mb-5">
+        <h4>Publications ({{ gene.publications|length }})</h4>
+        {% if gene.publications %}
+        <ul class="list-group">
+          {% for pub in gene.publications %}
+          <li class="list-group-item">
+            <div><strong>{{ pub.title }}</strong></div>
+            <div class="text-muted small mt-1">
+              {{ pub.authors }}
+              {% if pub.journal %} — <em>{{ pub.journal }}</em>{% endif %}
+              {% if pub.pub_year %} ({{ pub.pub_year }}){% endif %}
+              <a href="https://pubmed.ncbi.nlm.nih.gov/{{ pub.pmid }}"
+                 target="_blank" class="ms-2">PubMed ↗</a>
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-muted">No publications available yet.</p>
+        {% endif %}
+      </div>
+
+    </div><!-- /.gene-main -->
+  </div><!-- /.gene-layout -->
 </div>
 {% endblock %}
 
@@ -173,5 +272,44 @@ if (tcgaData.length > 0) {
     }
   });
 }
+
+// --- Scroll-spy: highlight active sidebar link based on visible section ---
+(function () {
+  const sections = document.querySelectorAll('.gene-section');
+  const navLinks = document.querySelectorAll('.gene-nav-link');
+
+  const linkMap = {};
+  navLinks.forEach(link => {
+    linkMap[link.dataset.target] = link;
+  });
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      const id = entry.target.id;
+      const link = linkMap[id];
+      if (!link) return;
+      if (entry.isIntersecting) {
+        navLinks.forEach(l => l.classList.remove('active'));
+        link.classList.add('active');
+      }
+    });
+  }, {
+    rootMargin: '-15% 0px -70% 0px',
+    threshold: 0
+  });
+
+  sections.forEach(section => observer.observe(section));
+
+  // Smooth scroll on click
+  navLinks.forEach(link => {
+    link.addEventListener('click', function (e) {
+      e.preventDefault();
+      const target = document.getElementById(this.dataset.target);
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+  });
+})();
 </script>
 {% endblock %}

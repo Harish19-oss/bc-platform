@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}{{ action }} {{ label }} — BC Platform{% endblock %}
+{% block content %}
+<div class="container mt-4" style="max-width: 700px;">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h3>{{ action }} — {{ label }}</h3>
+    <a href="{{ url_for('admin.table_list', name=model_name) }}" class="btn btn-sm btn-outline-secondary">
+      <i class="bi bi-arrow-left"></i> Back to list
+    </a>
+  </div>
+
+  <div class="bg-white rounded shadow-sm p-4">
+    <form method="post">
+      {% for col in columns %}
+      <div class="mb-3">
+        <label class="form-label fw-semibold">{{ col.name }}</label>
+        {% set current_val = row|attr(col.name) if row else "" %}
+        {% if "TEXT" in col.type|upper %}
+        <textarea name="{{ col.name }}" class="form-control" rows="3">{{ current_val if current_val is not none else "" }}</textarea>
+        {% else %}
+        <input type="text" name="{{ col.name }}" class="form-control" value="{{ current_val if current_val is not none else "" }}">
+        {% endif %}
+      </div>
+      {% endfor %}
+      <button type="submit" class="btn btn-primary text-white">
+        <i class="bi bi-check-lg"></i> Save
+      </button>
+    </form>
+  </div>
+</div>
+{% endblock %}

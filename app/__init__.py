@@ -38,5 +38,10 @@ def create_app():
         return AdminUser.query.get(int(user_id))
 
     login_manager.login_view = "admin.login"
+    from datetime import datetime
+
+    @app.context_processor
+    def inject_current_year():
+        return {"current_year": datetime.now().year}
 
     return app

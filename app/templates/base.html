@@ -5,29 +5,120 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}BC Platform{% endblock %}</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bc-navy: #151B33;
+      --bc-navy: #0F1530;
+      --bc-navy-light: #1B2247;
       --bc-emerald: #10B981;
+      --bc-emerald-dark: #0ea371;
+      --bc-teal: #14B8A6;
+      --bc-text-muted: #64748B;
     }
     body {
       font-family: 'IBM Plex Sans', sans-serif;
-      background-color: #F8F9FA;
+      background-color: #F8F9FB;
+      color: #1E2338;
     }
     h1, h2, h3, h4, .navbar-brand {
       font-family: 'Space Grotesk', sans-serif;
+      font-weight: 600;
     }
+
+    /* Navbar */
     .navbar-bc {
-      background-color: var(--bc-navy);
+      background: linear-gradient(90deg, var(--bc-navy) 0%, var(--bc-navy-light) 100%);
+      box-shadow: 0 2px 12px rgba(0,0,0,0.15);
     }
-    .btn-primary {
+    .navbar-bc .btn-outline-light {
+      border-color: rgba(255,255,255,0.3);
+      transition: all 0.2s ease;
+    }
+    .navbar-bc .btn-outline-light:hover {
       background-color: var(--bc-emerald);
       border-color: var(--bc-emerald);
     }
+
+    /* Hero (index page) */
+    .bc-hero {
+      background: radial-gradient(circle at top left, var(--bc-navy-light) 0%, var(--bc-navy) 60%);
+      position: relative;
+      overflow: hidden;
+    }
+    .bc-hero::before {
+      content: "";
+      position: absolute;
+      top: -50%;
+      right: -10%;
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(16,185,129,0.15) 0%, transparent 70%);
+      border-radius: 50%;
+    }
+
+    /* Stat cards */
+    .bc-stat-card {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      backdrop-filter: blur(4px);
+      transition: transform 0.2s ease, background 0.2s ease;
+    }
+    .bc-stat-card:hover {
+      transform: translateY(-4px);
+      background: rgba(255,255,255,0.1);
+    }
+    .bc-stat-card .bc-stat-number {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      background: linear-gradient(90deg, var(--bc-emerald), var(--bc-teal));
+      background-clip: text;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    /* Feature / explore cards */
+    .bc-feature-card {
+      border: 1px solid #E5E7EB;
+      border-radius: 14px;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    }
+    .bc-feature-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 24px rgba(16,24,64,0.08);
+      border-color: var(--bc-emerald);
+    }
+    .bc-feature-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--bc-emerald), var(--bc-teal));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 1.4rem;
+    }
+
+    /* Buttons */
+    .btn-primary {
+      background: linear-gradient(90deg, var(--bc-emerald), var(--bc-teal));
+      border: none;
+      font-weight: 500;
+      transition: opacity 0.2s ease;
+    }
     .btn-primary:hover {
-      background-color: #0ea371;
-      border-color: #0ea371;
+      opacity: 0.9;
+      background: linear-gradient(90deg, var(--bc-emerald), var(--bc-teal));
+    }
+
+    /* Tables (gene/protein lists) */
+    .table-hover tbody tr:hover {
+      background-color: rgba(16,185,129,0.06);
+    }
+    .badge.bg-secondary {
+      background-color: var(--bc-navy-light) !important;
     }
   </style>
   {% block extra_head %}{% endblock %}
@@ -35,12 +126,9 @@
 <body>
   <nav class="navbar navbar-dark navbar-bc">
     <div class="container">
-      <a class="navbar-brand fw-bold" href="{{ url_for('main.index') }}">BC Platform</a>
-      <div>
-        <a href="{{ url_for('genes.gene_list') }}" class="btn btn-sm btn-outline-light me-2">Genes</a>
-        <a href="{{ url_for('proteins.protein_list') }}" class="btn btn-sm btn-outline-light me-2">Proteins</a>
-        <a href="{{ url_for('admin.login') }}" class="btn btn-sm btn-outline-light">Admin</a>
-      </div>
+      <a class="navbar-brand fw-bold" href="{{ url_for('main.index') }}">
+        <i class="bi bi-dna me-1"></i> BC Platform
+      </a>
     </div>
   </nav>
 
@@ -48,12 +136,13 @@
     {% block content %}{% endblock %}
   </main>
 
-  <footer class="text-center text-muted py-4 mt-5">
-    <small>Breast Cancer Integrated Bioinformatics Platform</small>
+ <footer class="text-center text-muted py-4 mt-5">
+    <small>Breast Cancer Integrated Bioinformatics Platform</small><br>
+    <small>&copy; 2026 Harish Siva Balaji M. All rights reserved.</small>
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-{% block scripts %}{% endblock %}
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  {% block scripts %}{% endblock %}
 </body>
 </html>

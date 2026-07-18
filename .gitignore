@@ -1,0 +1,10 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+instance/
+*.db
+clinvar_debug.xml
+cosmic_debug.json
+reactome_debug.json
+.vscode/

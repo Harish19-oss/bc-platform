@@ -1,74 +1,271 @@
 {% extends "base.html" %}
+{% block title %}Gene Search — BC Platform{% endblock %}
 {% block content %}
-<div class="container mt-5">
-  <h2 class="mb-4">Gene Search</h2>
+<style>
+ .gene-search-hero {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(135deg, #151B33 0%, #1F2A4D 100%);
+    color: #fff;
+    padding: 2.5rem 1.5rem 4.5rem 1.5rem;
+  }
+  .gene-search-hero h2 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+    position: relative;
+    z-index: 1;
+  }
+  .gene-search-hero p {
+    opacity: 0.75;
+    margin-bottom: 0;
+    position: relative;
+    z-index: 1;
+  }
+  .gene-search-hero .container {
+    position: relative;
+    z-index: 1;
+  }
+  .dna-bg {
+    position: absolute;
+    top: -20px;
+    right: 40px;
+    height: 140px;
+    width: 90px;
+    opacity: 0.18;
+    pointer-events: none;
+    z-index: 0;
+  }
+  @media (max-width: 768px) {
+    .dna-bg { display: none; }
+  }
 
-  <!-- Search Bar -->
-  <form method="get" class="mb-3">
-    <div class="input-group">
-      <input type="text" name="q" class="form-control"
-             placeholder="Search by symbol or name..."
-             value="{{ query }}">
-      <button class="btn btn-primary" type="submit">Search</button>
-      {% if query %}
-      <a href="{{ url_for('genes.gene_list') }}" class="btn btn-outline-secondary">Clear</a>
-      {% endif %}
-    </div>
-  </form>
+  .gene-search-panel {
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 4px 16px rgba(21,27,51,0.1);
+    padding: 1.5rem;
+    margin-top: -2.5rem;
+    position: relative;
+    z-index: 2;
+  }
 
-  <!-- Filter by Chromosome -->
-  <form method="get" class="mb-4 d-flex gap-2">
-    <input type="hidden" name="q" value="{{ query }}">
-    <select name="chrom" class="form-select w-auto" onchange="this.form.submit()">
-      <option value="">All Chromosomes</option>
-      {% for c in chromosomes %}
-      <option value="{{ c }}" {% if chrom_filter == c %}selected{% endif %}>Chr {{ c }}</option>
-      {% endfor %}
-    </select>
-    <select name="sort" class="form-select w-auto" onchange="this.form.submit()">
-      <option value="symbol" {% if sort == 'symbol' %}selected{% endif %}>Sort: Symbol</option>
-      <option value="name" {% if sort == 'name' %}selected{% endif %}>Sort: Name</option>
-      <option value="chromosome" {% if sort == 'chromosome' %}selected{% endif %}>Sort: Chromosome</option>
-    </select>
-  </form>
+  .gene-search-panel .input-group .form-control {
+    border-radius: 10px 0 0 10px;
+    padding: 0.7rem 1rem;
+  }
+  .gene-search-panel .input-group .btn-primary {
+    border-radius: 0;
+    background: #10B981;
+    border-color: #10B981;
+  }
+  .gene-search-panel .input-group .btn-primary:hover {
+    background: #0ea371;
+    border-color: #0ea371;
+  }
+  .gene-search-panel .input-group .btn-outline-secondary {
+    border-radius: 0 10px 10px 0;
+  }
+
+  .gene-search-panel .form-select {
+    border-radius: 8px;
+  }
+
+  .gene-result-count {
+    color: #6c757d;
+    font-size: 0.9rem;
+  }
+
+  .gene-table-wrap {
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 2px 8px rgba(21,27,51,0.08);
+    overflow: hidden;
+  }
+  .gene-table-wrap table {
+    margin-bottom: 0;
+  }
+  .gene-table-wrap thead {
+    background: #151B33;
+  }
+  .gene-table-wrap thead th {
+    color: #fff;
+    font-weight: 600;
+    border: none;
+    padding: 0.9rem 1rem;
+  }
+  .gene-table-wrap tbody tr {
+    transition: background 0.12s ease;
+  }
+  .gene-table-wrap tbody tr:hover {
+    background: #ECFDF5;
+  }
+  .gene-table-wrap tbody td {
+    padding: 0.85rem 1rem;
+    vertical-align: middle;
+  }
+
+  .chrom-pill {
+    display: inline-block;
+    background: #F1F3F5;
+    color: #151B33;
+    font-weight: 600;
+    font-size: 0.8rem;
+    padding: 0.25rem 0.65rem;
+    border-radius: 999px;
+  }
+  .count-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 32px;
+    padding: 0.25rem 0.6rem;
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 0.8rem;
+  }
+  .count-pill.pathways {
+    background: #151B33;
+    color: #fff;
+  }
+  .count-pill.pubs {
+    background: #10B981;
+    color: #fff;
+  }
+
+  .btn-view {
+    background: transparent;
+    border: 1.5px solid #10B981;
+    color: #10B981;
+    border-radius: 8px;
+    font-weight: 600;
+    padding: 0.3rem 0.9rem;
+    transition: background 0.12s ease, color 0.12s ease;
+  }
+  .btn-view:hover {
+    background: #10B981;
+    color: #fff;
+  }
+
+  .gene-empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: #6c757d;
+  }
+  .gene-empty-state i {
+    font-size: 2.5rem;
+    color: #cfd6e6;
+    display: block;
+    margin-bottom: 0.75rem;
+  }
+</style>
+
+<div class="gene-search-hero">
+  <svg class="dna-bg" viewBox="0 0 100 200" xmlns="http://www.w3.org/2000/svg">
+    <g stroke="#10B981" stroke-width="3" fill="none">
+      <path d="M20,0 C60,40 60,40 20,80 C-20,120 -20,120 20,160 C60,200 60,200 20,240" transform="translate(20,-20)"/>
+      <path d="M60,0 C20,40 20,40 60,80 C100,120 100,120 60,160 C20,200 20,200 60,240" transform="translate(20,-20)"/>
+    </g>
+    <g stroke="#ffffff" stroke-width="2">
+      <line x1="30" y1="10" x2="70" y2="10"/>
+      <line x1="30" y1="45" x2="70" y2="45"/>
+      <line x1="30" y1="80" x2="70" y2="80"/>
+      <line x1="30" y1="115" x2="70" y2="115"/>
+      <line x1="30" y1="150" x2="70" y2="150"/>
+      <line x1="30" y1="185" x2="70" y2="185"/>
+    </g>
+  </svg>
+  <div class="container">
+    <h2>Gene Search</h2>
+    <p>Browse and filter all curated breast cancer genes.</p>
+  </div>
+</div>
+
+<div class="container">
+  <div class="gene-search-panel mb-4">
+    <!-- Search Bar -->
+    <form method="get" class="mb-3">
+      <div class="input-group">
+        <input type="text" name="q" class="form-control"
+               placeholder="Search by symbol or name..."
+               value="{{ query }}">
+        <button class="btn btn-primary text-white" type="submit">
+          <i class="bi bi-search"></i> Search
+        </button>
+        {% if query %}
+        <a href="{{ url_for('genes.gene_list') }}" class="btn btn-outline-secondary">Clear</a>
+        {% endif %}
+      </div>
+    </form>
+
+    <!-- Filter by Chromosome / Sort -->
+    <form method="get" class="d-flex flex-wrap gap-2">
+      <input type="hidden" name="q" value="{{ query }}">
+      <select name="chrom" class="form-select w-auto" onchange="this.form.submit()">
+        <option value="">All Chromosomes</option>
+        {% for c in chromosomes %}
+        <option value="{{ c }}" {% if chrom_filter == c %}selected{% endif %}>Chr {{ c }}</option>
+        {% endfor %}
+      </select>
+      <select name="sort" class="form-select w-auto" onchange="this.form.submit()">
+        <option value="symbol" {% if sort == 'symbol' %}selected{% endif %}>Sort: Symbol</option>
+        <option value="name" {% if sort == 'name' %}selected{% endif %}>Sort: Name</option>
+        <option value="chromosome" {% if sort == 'chromosome' %}selected{% endif %}>Sort: Chromosome</option>
+      </select>
+    </form>
+  </div>
 
   {% if genes %}
-  <p class="text-muted small">Showing {{ pagination.total }} gene(s)
+  <p class="gene-result-count mb-2">
+    Showing {{ pagination.total }} gene(s)
     {% if query %}matching "<strong>{{ query }}</strong>"{% endif %}
     {% if chrom_filter %}on chromosome {{ chrom_filter }}{% endif %}
   </p>
 
-  <table class="table table-hover">
-    <thead class="table-dark">
-      <tr>
-        <th>Symbol</th>
-        <th>Name</th>
-        <th>Chromosome</th>
-        <th>Pathways</th>
-        <th>Publications</th>
-        <th></th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for gene in genes %}
-      <tr>
-        <td><strong>{{ gene.symbol }}</strong></td>
-        <td>{{ gene.name }}</td>
-        <td>{{ gene.chromosome or '—' }}</td>
-        <td><span class="badge bg-secondary">{{ gene.pathways|length }}</span></td>
-        <td><span class="badge bg-info text-dark">{{ gene.publications|length }}</span></td>
-        <td><a href="{{ url_for('genes.gene_detail', gene_id=gene.gene_id) }}"
-               class="btn btn-sm btn-outline-primary">View</a></td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+  <div class="gene-table-wrap mb-4">
+    <table class="table table-hover">
+      <thead>
+        <tr>
+          <th>Symbol</th>
+          <th>Name</th>
+          <th>Chromosome</th>
+          <th>Pathways</th>
+          <th>Publications</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for gene in genes %}
+        <tr>
+          <td><strong>{{ gene.symbol }}</strong></td>
+          <td>{{ gene.name }}</td>
+          <td>
+            {% if gene.chromosome %}
+            <span class="chrom-pill">Chr {{ gene.chromosome }}</span>
+            {% else %}
+            <span class="text-muted">—</span>
+            {% endif %}
+          </td>
+          <td><span class="count-pill pathways">{{ gene.pathways|length }}</span></td>
+          <td><span class="count-pill pubs">{{ gene.publications|length }}</span></td>
+          <td class="text-end">
+            <a href="{{ url_for('genes.gene_detail', gene_id=gene.gene_id) }}" class="btn btn-sm btn-view">
+              View <i class="bi bi-arrow-right"></i>
+            </a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
 
   <nav>
-    <ul class="pagination">
+    <ul class="pagination justify-content-center">
       {% if pagination.has_prev %}
       <li class="page-item">
-        <a class="page-link" href="{{ url_for('genes.gene_list', q=query, chrom=chrom_filter, sort=sort, page=pagination.prev_num) }}">Previous</a>
+        <a class="page-link" href="{{ url_for('genes.gene_list', q=query, chrom=chrom_filter, sort=sort, page=pagination.prev_num) }}">
+          <i class="bi bi-chevron-left"></i> Previous
+        </a>
       </li>
       {% endif %}
       <li class="page-item disabled">
@@ -76,14 +273,19 @@
       </li>
       {% if pagination.has_next %}
       <li class="page-item">
-        <a class="page-link" href="{{ url_for('genes.gene_list', q=query, chrom=chrom_filter, sort=sort, page=pagination.next_num) }}">Next</a>
+        <a class="page-link" href="{{ url_for('genes.gene_list', q=query, chrom=chrom_filter, sort=sort, page=pagination.next_num) }}">
+          Next <i class="bi bi-chevron-right"></i>
+        </a>
       </li>
       {% endif %}
     </ul>
   </nav>
 
   {% else %}
-  <p class="text-muted">No genes found. Try a different search term.</p>
+  <div class="gene-empty-state">
+    <i class="bi bi-search"></i>
+    <p class="mb-0">No genes found. Try a different search term or clear your filters.</p>
+  </div>
   {% endif %}
 </div>
 {% endblock %}
