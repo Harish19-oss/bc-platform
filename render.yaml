@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: bc-platform
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn run:app
+    envVars:
+      - key: FLASK_APP
+        value: run.py
+      - key: SECRET_KEY
+        value: bc-platform-secret-key-2024
+      - key: DATABASE_URL
+        value: postgresql://bc_platform_db_user:jD7QPx9xbbdXCc4JR3otP2zM993GFKaw@dpg-d9e59burnols73djf21g-a/bc_platform_db
